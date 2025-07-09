@@ -15,11 +15,10 @@ jobs:
         run: |
           git clone https://github.com/rrodriguez942/opa-policies-central.git policies
 
-      - name: Instalar yq y jq para convertir YAML a JSON
+      - name: Instalar yq para convertir YAML a JSON
         run: |
           wget https://github.com/mikefarah/yq/releases/download/v4.40.5/yq_linux_amd64 -O yq
           chmod +x yq
-          sudo apt-get update && sudo apt-get install -y jq
 
       - name: Descargar OPA
         run: |
@@ -40,15 +39,10 @@ jobs:
             exit 1
           fi
 
-      - name: Extraer imagen del deployment.json y crear input para OPA (docker)
+      - name: Validar deployment.yaml con OPA (docker)
         run: |
-          IMAGE=$(cat deployment.json | jq -r '.spec.template.spec.containers[0].image')
-          echo "{ \"kind\": \"Dockerfile\", \"image\": \"$IMAGE\" }" > deployment_image.json
-
-      - name: Validar imagen del deployment.yaml con política de docker
-        run: |
-          ./opa eval --input deployment_image.json --data ./policies/docker 'data.docker.deny'
-          result=$(./opa eval --input deployment_image.json --data ./policies/docker 'data.docker.deny' --format raw)
+          ./opa eval --input deployment.json --data ./policies/docker 'data.docker.deny'
+          result=$(./opa eval --input deployment.json --data ./policies/docker 'data.docker.deny' --format raw)
           if [ "$result" != "[]" ]; then
             echo "Políticas OPA no cumplidas (docker):"
             echo "$result"
