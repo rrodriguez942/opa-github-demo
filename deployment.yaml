@@ -13,4 +13,4 @@ spec:
     spec:
       conteiners:
       - name: demo
-        image: registry.empresa.com/demo:latest
+        image: nginx:latest
