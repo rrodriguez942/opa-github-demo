@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: demo-app
   labels:
-    environment: produccion
+    environment: produccion # comentario
 spec:
   replicas: 2
   template:
