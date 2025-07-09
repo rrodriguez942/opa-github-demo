@@ -15,23 +15,42 @@ jobs:
         run: |
           git clone https://github.com/rrodriguez942/opa-policies-central.git policies
 
-      - name: Instalar yq para convertir YAML a JSON
+      - name: Instalar yq y jq para convertir YAML a JSON
         run: |
           wget https://github.com/mikefarah/yq/releases/download/v4.40.5/yq_linux_amd64 -O yq
           chmod +x yq
-          ./yq -o=json '.' deployment.yaml > deployment.json
+          sudo apt-get update && sudo apt-get install -y jq
 
       - name: Descargar OPA
         run: |
           wget https://openpolicyagent.org/downloads/latest/opa_linux_amd64 -O opa
           chmod +x opa
 
-      - name: Validar deployment.yaml con OPA
+      - name: Convertir deployment.yaml a JSON
+        run: |
+          ./yq -o=json '.' deployment.yaml > deployment.json
+
+      - name: Validar deployment.yaml con OPA (pipeline)
         run: |
           ./opa eval --input deployment.json --data ./policies/pipeline 'data.pipeline.deny'
           result=$(./opa eval --input deployment.json --data ./policies/pipeline 'data.pipeline.deny' --format raw)
           if [ "$result" != "[]" ]; then
-            echo "Políticas OPA no cumplidas:"
+            echo "Políticas OPA no cumplidas (pipeline):"
+            echo "$result"
+            exit 1
+          fi
+
+      - name: Extraer imagen del deployment.json y crear input para OPA (docker)
+        run: |
+          IMAGE=$(cat deployment.json | jq -r '.spec.template.spec.containers[0].image')
+          echo "{ \"kind\": \"Dockerfile\", \"image\": \"$IMAGE\" }" > deployment_image.json
+
+      - name: Validar imagen del deployment.yaml con política de docker
+        run: |
+          ./opa eval --input deployment_image.json --data ./policies/docker 'data.docker.deny'
+          result=$(./opa eval --input deployment_image.json --data ./policies/docker 'data.docker.deny' --format raw)
+          if [ "$result" != "[]" ]; then
+            echo "Políticas OPA no cumplidas (docker):"
             echo "$result"
             exit 1
           fi
