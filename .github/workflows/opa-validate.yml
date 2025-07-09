@@ -7,8 +7,6 @@ on:
 jobs:
   opa-validate:
     runs-on: ubuntu-latest
-    container:
-      image: openpolicyagent/opa:latest
     steps:
       - name: Checkout repo de aplicación
         uses: actions/checkout@v4
@@ -23,10 +21,15 @@ jobs:
           chmod +x /usr/bin/yq
           yq -o=json '.' deployment.yaml > deployment.json
 
+      - name: Descargar OPA
+        run: |
+          wget https://openpolicyagent.org/downloads/latest/opa_linux_amd64 -O opa
+          chmod +x opa
+
       - name: Validar deployment.yaml con OPA
         run: |
-          opa eval --input deployment.json --data ./policies/pipeline 'data.pipeline.deny'
-          result=$(opa eval --input deployment.json --data ./policies/pipeline 'data.pipeline.deny' --format raw)
+          ./opa eval --input deployment.json --data ./policies/pipeline 'data.pipeline.deny'
+          result=$(./opa eval --input deployment.json --data ./policies/pipeline 'data.pipeline.deny' --format raw)
           if [ "$result" != "[]" ]; then
             echo "Políticas OPA no cumplidas:"
             echo "$result"
