@@ -1,9 +1,9 @@
 apiversion: apps/v1
 kind: Deployment
 metadata:
-  name: demo-app
+  #name: demo-app
   labels:
-    environment: desarrollo # desarrollo, produccion
+    environment: produccion # desarrollo, produccion
 spec:
   replicas: 2
   template:
