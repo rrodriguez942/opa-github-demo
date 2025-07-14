@@ -35,4 +35,4 @@ jobs:
       - name: Validar deployment.json con conftest
         run: |
           conftest test deployment.json --policy opa-policies/docker --namespace docker
-          conftest test deployment.json --policy opa-policies/kubernetes --namespace pipelines
+          conftest test deployment.json --policy opa-policies/pipeline --namespace pipelines
