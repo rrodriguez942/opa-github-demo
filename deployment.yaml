@@ -13,4 +13,4 @@ spec:
     spec:
       containers:
       - name: demo
-        image: nginx:latest
+        image: docker.io/empresa/
